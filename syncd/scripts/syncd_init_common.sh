@@ -175,6 +175,11 @@ config_syncd_vs()
     CMD_ARGS+=" -p $HWSKU_DIR/sai.profile"
 }
 
+config_syncd_soda()
+{
+    CMD_ARGS+=" -p $HWSKU_DIR/sai.profile"
+}
+
 config_syncd_innovium()
 {
     CMD_ARGS+=" -p $HWSKU_DIR/sai.profile"
@@ -206,6 +211,8 @@ config_syncd()
         config_syncd_vs
     elif [ "$SONIC_ASIC_TYPE" == "innovium" ]; then
         config_syncd_innovium
+    elif [ "$SONIC_ASIC_TYPE" == "soda" ]; then
+        config_syncd_soda
     else
         echo "Unknown ASIC type $SONIC_ASIC_TYPE"
         exit 1
