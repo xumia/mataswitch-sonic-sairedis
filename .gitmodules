@@ -1,5 +1,5 @@
 [submodule "SAI"]
 	path = SAI
-	url = https://github.com/qbdwlr/SAI.git
+	url = git@git.datcon.co.uk:nst/sai.git
 	ignore = dirty
-	branch = v1.3
+	branch = master
