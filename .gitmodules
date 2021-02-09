@@ -1,5 +1,5 @@
 [submodule "SAI"]
 	path = SAI
-	url = git@git.datcon.co.uk:nst/sai.git
+	url = git@github.com:Metaswitch/SAI.git
 	ignore = dirty
 	branch = master
