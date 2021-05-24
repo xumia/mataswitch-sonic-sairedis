@@ -49,7 +49,7 @@ __attribute__((__noreturn__)) void dump_stack(int sig, siginfo_t *info, void *co
   free(stack_lines);
 
   // Terminate.
-  exit(-1);
+  raise(sig);
 }
 #endif
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     // Install signal handling so we can get useful crash info.
     struct sigaction sa = {};
     sa.sa_sigaction = &dump_stack;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_RESETHAND;
     auto rc = sigaction(SIGSEGV, &sa, nullptr);
     assert(rc == 0);
     rc = sigaction(SIGABRT, &sa, nullptr);
