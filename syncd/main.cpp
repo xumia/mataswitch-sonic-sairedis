@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cxxabi.h>
 
-__attribute__((__noreturn__)) void dump_stack(int sig, siginfo_t *info, void *context)
+void dump_stack(int sig, siginfo_t *info, void *context)
 {
   constexpr unsigned char max_stack_depth = 32;
   // Get the stack
