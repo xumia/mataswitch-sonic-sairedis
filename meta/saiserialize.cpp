@@ -247,6 +247,10 @@ sai_status_t transfer_attribute(
             RETURN_ON_ERROR(transfer_list(src_attr.value.qosmap, dst_attr.value.qosmap, countOnly));
             break;
 
+        case SAI_ATTR_VALUE_TYPE_MAP_LIST:
+            RETURN_ON_ERROR(transfer_list(src_attr.value.maplist, dst_attr.value.maplist, countOnly));
+            break;
+
         case SAI_ATTR_VALUE_TYPE_ACL_RESOURCE_LIST:
             RETURN_ON_ERROR(transfer_list(src_attr.value.aclresource, dst_attr.value.aclresource, countOnly));
             break;
@@ -1175,6 +1179,7 @@ json sai_serialize_qos_map_params(
     j["pg"]       = params.pg;
     j["qidx"]     = params.queue_index;
     j["mpls_exp"] = params.mpls_exp;
+    j["fc"]       = params.fc;
     j["color"]    = sai_serialize_packet_color(params.color);
 
     return j;
@@ -1228,6 +1233,50 @@ std::string sai_serialize_qos_map_list(
     for (uint32_t i = 0; i < qosmap.count; ++i)
     {
         json item = sai_serialize_qos_map(qosmap.list[i]);
+
+        arr.push_back(item);
+    }
+
+    j["list"] = arr;
+
+    return j.dump();
+}
+
+json sai_serialize_map(
+    _In_ const sai_map_t &map)
+{
+    SWSS_LOG_ENTER();
+
+    json j;
+
+    j["key"] = map.key;
+    j["value"] = map.value;
+
+    return j;
+}
+
+std::string sai_serialize_map_list(
+    _In_ const sai_map_list_t &maplist,
+    _In_ bool countOnly)
+{
+    SWSS_LOG_ENTER();
+
+    json j;
+
+    j["count"] = maplist.count;
+
+    if (maplist.list == NULL || countOnly)
+    {
+        j["list"] = nullptr;
+
+        return j.dump();
+    }
+
+    json arr = json::array();
+
+    for (uint32_t i = 0; i < maplist.count; ++i)
+    {
+        json item = sai_serialize_map(maplist.list[i]);
 
         arr.push_back(item);
     }
@@ -1608,6 +1657,9 @@ std::string sai_serialize_attr_value(
 
         case SAI_ATTR_VALUE_TYPE_QOS_MAP_LIST:
             return sai_serialize_qos_map_list(attr.value.qosmap, countOnly);
+
+        case SAI_ATTR_VALUE_TYPE_MAP_LIST:
+            return sai_serialize_map_list(attr.value.maplist, countOnly);
 
         case SAI_ATTR_VALUE_TYPE_ACL_RESOURCE_LIST:
             return sai_serialize_acl_resource_list(attr.value.aclresource, countOnly);
@@ -2331,6 +2383,16 @@ void sai_deserialize_qos_map_params(
         params.mpls_exp       = j["mpls_exp"];
     }
 
+    if (j.find("fc") == j.end())
+    {
+        // for backward compatibility
+        params.fc = 0;
+    }
+    else
+    {
+        params.fc = j["fc"];
+    }
+
     sai_deserialize_packet_color(j["color"], params.color);
 }
 
@@ -2342,6 +2404,16 @@ void sai_deserialize_qos_map(
 
     sai_deserialize_qos_map_params(j["key"], qosmap.key);
     sai_deserialize_qos_map_params(j["value"], qosmap.value);
+}
+
+void sai_deserialize_map(
+    _In_ const json &j,
+    _Out_ sai_map_t &map)
+{
+    SWSS_LOG_ENTER();
+
+    map.key =   j["key"];
+    map.value = j["value"];
 }
 
 void sai_deserialize_qos_map_list(
@@ -2380,6 +2452,45 @@ void sai_deserialize_qos_map_list(
         const json& item = arr[i];
 
         sai_deserialize_qos_map(item, qosmap.list[i]);
+    }
+}
+
+void sai_deserialize_map_list(
+    _In_ const std::string &s,
+    _Out_ sai_map_list_t &maplist,
+    _In_ bool countOnly)
+{
+    SWSS_LOG_ENTER();
+
+    json j = json::parse(s);
+
+    maplist.count = j["count"];
+
+    if (countOnly)
+    {
+        return;
+    }
+
+    if (j["list"] == nullptr)
+    {
+        maplist.list = NULL;
+        return;
+    }
+
+    json arr = j["list"];
+
+    if (arr.size() != (size_t)maplist.count)
+    {
+        SWSS_LOG_THROW("map list count mismatch %lu vs %u", arr.size(), maplist.count);
+    }
+
+    maplist.list = sai_alloc_n_of_ptr_type(maplist.count, maplist.list);
+
+    for (uint32_t i = 0; i < maplist.count; ++i)
+    {
+        const json &item = arr[i];
+
+        sai_deserialize_map(item, maplist.list[i]);
     }
 }
 
@@ -2962,6 +3073,9 @@ void sai_deserialize_attr_value(
 
         case SAI_ATTR_VALUE_TYPE_QOS_MAP_LIST:
             return sai_deserialize_qos_map_list(s, attr.value.qosmap, countOnly);
+
+        case SAI_ATTR_VALUE_TYPE_MAP_LIST:
+            return sai_deserialize_map_list(s, attr.value.maplist, countOnly);
 
         case SAI_ATTR_VALUE_TYPE_ACL_RESOURCE_LIST:
             return sai_deserialize_acl_resource_list(s, attr.value.aclresource, countOnly);
@@ -3546,6 +3660,10 @@ void sai_deserialize_free_attribute_value(
 
         case SAI_ATTR_VALUE_TYPE_QOS_MAP_LIST:
             sai_free_list(attr.value.qosmap);
+            break;
+
+        case SAI_ATTR_VALUE_TYPE_MAP_LIST:
+            sai_free_list(attr.value.maplist);
             break;
 
         case SAI_ATTR_VALUE_TYPE_ACL_RESOURCE_LIST:

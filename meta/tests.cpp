@@ -3760,6 +3760,50 @@ void test_serialize_acl_action()
     ASSERT_TRUE(s, "77");
 }
 
+void test_serialize_map()
+{
+    SWSS_LOG_ENTER();
+
+    clear_local();
+
+    sai_attribute_t attr;
+    const sai_attr_metadata_t* meta;
+    std::string s;
+
+    attr.id = SAI_NEXT_HOP_GROUP_ATTR_FORWARDING_CLASS_TO_INDEX_MAP;
+
+    sai_map_t map = { .key = 1, .value = 11 };
+
+    attr.value.maplist.count = 1;
+    attr.value.maplist.list = &map;
+
+    meta = sai_metadata_get_attr_metadata(SAI_OBJECT_TYPE_NEXT_HOP_GROUP, attr.id);
+
+    s = sai_serialize_attr_value(*meta, attr);
+
+    std::string ret = "{\"count\":1,\"list\":[{\"key\":1,\"value\":11}]}";
+
+    ASSERT_TRUE(s, ret);
+
+    s = sai_serialize_attr_value(*meta, attr, true);
+
+    std::string ret2 = "{\"count\":1,\"list\":null}";
+    ASSERT_TRUE(s, ret2);
+
+    // deserialize
+
+    memset(&attr, 0, sizeof(attr));
+
+    sai_deserialize_attr_value(ret, *meta, attr);
+
+    ASSERT_TRUE(attr.value.maplist.count, 1);
+
+    auto &l = attr.value.maplist.list[0];
+    ASSERT_TRUE(l.key, 1);
+
+    ASSERT_TRUE(l.value, 11);
+}
+
 void test_serialize_qos_map()
 {
     SWSS_LOG_ENTER();
@@ -3994,6 +4038,7 @@ int main()
     test_serialize_oid();
     test_serialize_oid_list();
     test_serialize_acl_action();
+    test_serialize_map();
     test_serialize_qos_map();
 
     // attributes tests
