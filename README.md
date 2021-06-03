@@ -73,6 +73,18 @@ If you do not have libsai, you can build a debian package using:
     ./autogen.sh
     fakeroot debian/rules binary-syncd-vs
 
+#### Run meta UTs
+
+The unit tests from the meta directory run during the build process, but can also be triggered manually. After building is done, go to the meta directory and run either:
+
+    make check
+
+or directly:
+
+    ./tests
+
+to run the unit tests. The tests might complain about some missing libraries, which can be found under meta/.libs/ - just create some symbolic links to the libraries under /usr/lib.
+
 ## Need Help?
 
 For general questions, setup help, or troubleshooting:
