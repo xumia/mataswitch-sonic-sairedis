@@ -27,7 +27,7 @@ fi
 # Use temporary view between init and apply
 CMD_ARGS+=" -u"
 
-# Use bulk api`s in SAI
+# Use bulk APIs in SAI
 # currently disabled since most vendors don't support that yet
 # CMD_ARGS+=" -l"
 
@@ -177,7 +177,8 @@ config_syncd_vs()
 
 config_syncd_soda()
 {
-    CMD_ARGS+=" -p $HWSKU_DIR/sai.profile"
+    # Add support for SAI bulk operations
+    CMD_ARGS+=" -l -p $HWSKU_DIR/sai.profile"
 }
 
 config_syncd_innovium()
