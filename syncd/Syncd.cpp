@@ -1492,7 +1492,7 @@ sai_status_t Syncd::processBulkOidRemove(
     status = m_vendorSai->bulkRemove(
                                 objectType,
                                 (uint32_t)object_count,
-                                objectVids.data(),
+                                objectRids.data(),
                                 mode,
                                 statuses.data());
 
